@@ -1,0 +1,1524 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#c5d1b6" />
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="./assets/favicon-48x48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/android-chrome-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="./assets/android-chrome-512x512.png" />
+    <script src="./support.js"></script>
+  </head>
+  <body>
+    <x-dc>
+      <helmet>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500&family=Marck+Script&family=Great+Vibes&family=Old+Standard+TT&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap"
+          rel="stylesheet"
+        />
+        <style>
+          :root {
+            --bg: #c5d1b6;
+            --ink: #33221a;
+            --body: #4a3428;
+            --muted: #7d6656;
+            --line: #c9b6a6;
+            --accent: #5c1420;
+          }
+          * {
+            box-sizing: border-box;
+          }
+          body {
+            margin: 0;
+            background: linear-gradient(90deg, #a2a58f, #a6ae98 50%, #a8b39c);
+            min-height: 100vh;
+          }
+          .bgfix {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background: #c5d1b6 url("./assets/bg-sage-tile.jpg") top center / 100% auto repeat-y;
+            pointer-events: none;
+          }
+          .page > section {
+            position: relative;
+            z-index: 1;
+          }
+          a {
+            color: var(--ink);
+            text-decoration: none;
+          }
+          a:hover {
+            color: var(--body);
+          }
+          /* ENVELOPE — intro (recreated from reference, frame by frame)
+             Stage is designed at 702×1300 and scaled to fit the screen.
+             Timeline after tap:
+               0.00–2.20s  camera pulls back from the seal close-up
+               0.45–1.35s  flap flips up (3D), seal rides on its tip
+               1.30–2.90s  card glides up out of the envelope
+               3.40–5.00s  exit: background warms to the page colour,
+                           envelope sinks away, card drifts up and dissolves
+               4.40–5.30s  overlay dissolves, first page block fades up */
+          @font-face {
+            font-family: "Great Vibes";
+            src: url("./assets/fonts/great-vibes.woff") format("woff");
+            font-display: block;
+          }
+          @font-face {
+            font-family: "Cormorant Garamond Local";
+            src: url("./assets/fonts/cormorant-garamond.woff") format("woff");
+            font-weight: 600;
+            font-display: block;
+          }
+          .env-screen {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 100%;
+            max-width: 460px;
+            transform: translateX(-50%);
+            box-shadow: 0 0 40px rgba(40, 20, 20, 0.3);
+            z-index: 100;
+            background: #4a1314;
+            overflow: hidden;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition:
+              background-color 1.6s cubic-bezier(0.45, 0, 0.35, 1),
+              opacity 0.9s ease;
+          }
+          .env-screen.leave {
+            background-color: #c5d1b6;
+          }
+          .env-screen.gone {
+            opacity: 0;
+            pointer-events: none;
+          }
+          .ev-stage {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 702px;
+            height: 1300px;
+            margin: -650px 0 0 -351px;
+            transform: scale(var(--ev-k, 0.55));
+          }
+          .ev-cam {
+            position: absolute;
+            inset: 0;
+            transform-origin: 351px 891px;
+            transform: translateY(-215px) scale(var(--ev-z0, 2.3));
+            perspective: 2400px;
+            will-change: transform;
+          }
+          .ev-cam.open {
+            transform: translateY(0) scale(1);
+            transition: transform 2.2s cubic-bezier(0.45, 0.05, 0.15, 1);
+          }
+          .ev-paper {
+            background-color: #e8e3d6;
+            background-image: url("./assets/env-paper.jpg");
+            background-size: 512px 512px;
+          }
+          /* inside of the envelope */
+          .ev-back {
+            position: absolute;
+            left: 48px;
+            top: 515px;
+            width: 607px;
+            height: 670px;
+            z-index: 1;
+            box-shadow: 0 18px 40px rgba(20, 0, 0, 0.35);
+          }
+          .ev-back::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(70, 50, 30, 0.22), rgba(70, 50, 30, 0.1));
+          }
+          /* card */
+          .ev-card {
+            position: absolute;
+            left: 68px;
+            top: 522px;
+            width: 567px;
+            height: 640px;
+            z-index: 3;
+            background-color: #f7f3ec;
+            background-image: url("./assets/card-paper.jpg");
+            background-size: 512px 512px;
+            box-shadow:
+              0 0 0 1px rgba(120, 100, 80, 0.06),
+              0 -3px 12px rgba(40, 20, 10, 0.12);
+            text-align: center;
+            color: #9b2230;
+          }
+          .ev-cam.open .ev-card {
+            transform: translateY(-287px);
+            transition: transform 1.6s cubic-bezier(0.35, 0, 0.15, 1) 1.3s;
+          }
+          .ev-card-top {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 108px;
+            font-family: "Cormorant Garamond Local", "Cormorant Garamond", serif;
+            font-weight: 600;
+            font-size: 39px;
+            letter-spacing: 0.1em;
+            line-height: 1;
+          }
+          .ev-card-names {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 188px;
+            font-family: "Great Vibes", cursive;
+            font-weight: 400;
+            font-size: 122px;
+            line-height: 0.8;
+            color: #4a1314;
+          }
+          .ev-card-names span {
+            display: block;
+          }
+          .ev-card-names .n1 {
+            margin-left: -26px;
+          }
+          .ev-card-names .n2 {
+            margin-left: 40px;
+          }
+          .ev-card-date {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 452px;
+            font-family: "Cormorant Garamond Local", "Cormorant Garamond", serif;
+            font-weight: 600;
+            font-size: 36px;
+            letter-spacing: 0.03em;
+            line-height: 1;
+          }
+          /* front pocket (svg) */
+          .ev-pocket {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 702px;
+            height: 1300px;
+            z-index: 4;
+            pointer-events: none;
+            overflow: visible;
+          }
+          /* flap */
+          .ev-flap {
+            position: absolute;
+            left: 48px;
+            top: 515px;
+            width: 607px;
+            height: 385px;
+            z-index: 6;
+            transform-origin: 50% 0;
+            transform: rotateX(0deg);
+            transform-style: preserve-3d;
+          }
+          .ev-cam.open .ev-flap {
+            transform: rotateX(180deg);
+            z-index: 2;
+            transition:
+              transform 0.9s cubic-bezier(0.45, 0, 0.25, 1) 0.45s,
+              z-index 0s linear 0.9s;
+          }
+          .ev-face {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 607px;
+            height: 385px;
+            overflow: visible;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+          }
+          .ev-face.inner {
+            transform: rotateX(180deg);
+          }
+          .ev-seal {
+            position: absolute;
+            left: 243.5px;
+            top: 316px;
+            width: 120px;
+            height: 120px;
+            transform: translateZ(1px);
+          }
+          .ev-seal {
+            transform-style: preserve-3d;
+          }
+          .ev-seal svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            display: block;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+          }
+          /* seal as seen once the flap is flipped up: upright, in front of the flap tip */
+          .ev-seal .sb {
+            transform: translateZ(-3px) rotateX(180deg);
+          }
+          /* exit into the page */
+          .env-screen.leave .ev-back,
+          .env-screen.leave .ev-pocket {
+            transform: translateY(240px);
+            opacity: 0;
+            transition:
+              transform 1.4s cubic-bezier(0.55, 0, 0.3, 1),
+              opacity 1.1s ease 0.2s;
+          }
+          .env-screen.leave .ev-flap {
+            transform: translateY(240px) rotateX(180deg);
+            transition: transform 1.4s cubic-bezier(0.55, 0, 0.3, 1);
+          }
+          /* fade the flap's leaves, not the 3D flap itself (opacity would flatten it) */
+          .env-screen.leave .ev-face,
+          .env-screen.leave .ev-seal svg {
+            opacity: 0;
+            transition: opacity 1.1s ease 0.2s;
+          }
+          .env-screen.leave .ev-card {
+            transform: translateY(-330px) scale(1.05);
+            opacity: 0;
+            transition:
+              transform 1.7s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 1.2s ease 0.45s;
+          }
+          .ev-hint {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: max(28px, 5vh);
+            text-align: center;
+            font-family: "Cormorant Garamond Local", "Cormorant Garamond", serif;
+            font-weight: 600;
+            font-size: 15px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: rgba(110, 34, 40, 0.75);
+            animation: evHint 2.8s ease-in-out infinite;
+            pointer-events: none;
+          }
+          .ev-hint.hide {
+            animation: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
+          @keyframes evHint {
+            0%, 100% { opacity: 0.35; }
+            50% { opacity: 0.9; }
+          }
+          /* PAGE */
+          .page {
+            max-width: 460px;
+            margin: 0 auto;
+            background: transparent;
+            min-height: 100vh;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(60, 66, 50, 0.25);
+            position: relative;
+            color: var(--body);
+          }
+          .sec {
+            padding: 52px 32px 0px;
+          }
+          .h1 {
+            font-family: "Great Vibes", cursive;
+            color: var(--ink);
+            font-weight: 400;
+            font-size: 64px;
+            line-height: 1.1;
+            text-align: center;
+            letter-spacing: 0;
+          }
+          .lead {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 17px;
+            line-height: 1.7;
+            text-align: center;
+            color: var(--body);
+          }
+          .divm {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 0 32px 42px;
+          }
+          .divm .ln {
+            height: 1px;
+            background: var(--line);
+            flex: 1;
+          }
+          .divm .dm {
+            width: 7px;
+            height: 7px;
+            background: var(--line);
+            transform: rotate(45deg);
+            flex: none;
+          }
+          .satin {
+            padding: 0;
+            margin: 0 -32px;
+          }
+          .pframe {
+            width: 100%;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            border-radius: 0;
+            }
+          .pframe img {
+            width: 100%;
+            height: auto;
+            display: block;
+          }
+          .stamp {
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
+            color: var(--ink);
+            text-align: center;
+            line-height: 1.2;
+            margin: 26px auto 24px;
+            display: table;
+            position: relative;
+            padding: 12px 30px 14px;
+            border: 1px solid rgba(250, 245, 236, 0.95);
+            outline: 1px solid rgba(250, 245, 236, 0.7);
+            outline-offset: 5px;
+          }
+          .stamp::before,
+          .stamp::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 7px;
+            height: 7px;
+            margin-top: -3.5px;
+            background: #faf5ec;
+            transform: rotate(45deg);
+          }
+          .stamp::before {
+            left: -9.5px;
+          }
+          .stamp::after {
+            right: -9.5px;
+          }
+          .linkbtn {
+            display: block;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: 120px/60px;
+            padding: 20px;
+            text-align: center;
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 400;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            margin-top: 26px;
+            transition: background 0.35s ease, color 0.35s ease;
+          }
+          .linkbtn:hover {
+            background: var(--accent);
+            color: #f6efe4;
+          }
+          .pname {
+            font-family: "Great Vibes", cursive;
+            font-weight: 400;
+            letter-spacing: 0;
+            font-size: 60px;
+            line-height: 1.1;
+            color: var(--ink);
+            text-align: center;
+            margin: 34px 0 22px;
+          }
+          .verse {
+            font-family: "Playfair Display", serif;
+            font-style: italic;
+            font-size: 22px;
+            line-height: 1.45;
+            color: var(--body);
+            text-align: center;
+          }
+          .vref {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 15px;
+            letter-spacing: 1px;
+            color: var(--muted);
+            text-align: right;
+            margin-top: 14px;
+          }
+          .dtrow {
+            display: flex;
+            margin-top: 0;
+          }
+          .dtcell {
+            flex: 1;
+            text-align: center;
+            padding: 6px 8px;
+          }
+          .dtbig {
+            font-family: "Playfair Display", serif;
+            font-size: 34px;
+            color: var(--ink);
+            line-height: 1;
+          }
+          .dtsm {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 13px;
+            color: var(--body);
+            margin-top: 8px;
+            line-height: 1.4;
+          }
+          .dtsep {
+            width: 1px;
+            background: var(--line);
+            align-self: stretch;
+            margin: 4px 0;
+          }
+          .swrow {
+            display: flex;
+            justify-content: center;
+            gap: clamp(4px, 1.5vw, 10px);
+            flex-wrap: nowrap;
+            width: 100%;
+          }
+          .swatch {
+            width: clamp(54px, 14.5vw, 76px);
+            height: clamp(54px, 14.5vw, 76px);
+            border-radius: 50%;
+            box-shadow: 0 4px 18px rgba(80, 66, 48, 0.18);
+            flex: none;
+          }
+          .tl {
+            position: relative;
+            margin-top: 56px;
+            padding-bottom: 10px;
+          }
+          .tl::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: -16px;
+            bottom: 0;
+            width: 1px;
+            background: var(--accent);
+            opacity: 0.55;
+          }
+          .tlitem {
+            position: relative;
+            width: 50%;
+          }
+          .tlitem + .tlitem {
+            margin-top: -14px;
+          }
+          .tlitem.r {
+            margin-left: 50%;
+          }
+          .tlrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 0 8px 12px;
+            border-bottom: 1px solid rgba(92, 20, 32, 0.55);
+          }
+          .tlitem.r .tlrow {
+            flex-direction: row-reverse;
+          }
+          .tlicon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            flex: none;
+          }
+          .tlicon svg {
+            width: 40px;
+            height: 40px;
+            color: var(--ink);
+            display: block;
+          }
+          .tltime {
+            font-family: "Playfair Display", serif;
+            font-size: 32px;
+            color: var(--ink);
+            line-height: 1;
+          }
+          .tllab {
+            font-family: "Playfair Display", serif;
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--ink);
+            text-align: center;
+            line-height: 1.3;
+            text-wrap: balance;
+            padding: 18px 10px 0;
+          }
+          .field {
+            margin-top: 34px;
+          }
+          .flab {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 400;
+            font-size: 16px;
+            color: var(--ink);
+            margin-bottom: 14px;
+          }
+          .inp {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            padding: 20px 22px;
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 16px;
+            color: var(--ink);
+            outline: none;
+          }
+          .inp::placeholder {
+            color: var(--muted);
+          }
+          .inp:focus {
+            border-color: var(--ink);
+          }
+          .inp.err {
+            border-color: #b5544a;
+          }
+          .ferr {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 400;
+            font-size: 13px;
+            color: #b5544a;
+            margin-top: 0;
+          }
+          .oval.disabled {
+            opacity: 0.55;
+            pointer-events: none;
+          }
+          .step {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+          }
+          .stbtn {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            color: var(--body);
+            cursor: pointer;
+            user-select: none;
+          }
+          .stval {
+            width: 62px;
+            height: 62px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 24px;
+            color: var(--ink);
+          }
+          .radio {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            cursor: pointer;
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 18px;
+            color: var(--body);
+          }
+          .radio .rc {
+            width: 26px;
+            height: 26px;
+            border: 1.5px solid var(--line);
+            border-radius: 50%;
+            position: relative;
+            flex: none;
+          }
+          .radio.on .rc {
+            border-color: var(--ink);
+          }
+          .radio.on .rc::after {
+            content: "";
+            position: absolute;
+            inset: 5px;
+            border-radius: 50%;
+            background: var(--ink);
+          }
+          .radio.on {
+            color: var(--ink);
+          }
+          .oval {
+            border: 1px solid var(--line);
+            border-radius: 120px/60px;
+            padding: 26px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: transparent;
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 18px;
+            color: var(--ink);
+            letter-spacing: 0.5px;
+            margin-top: 40px;
+            transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+          }
+          .oval:hover {
+            background: var(--ink);
+            color: var(--bg);
+            border-color: var(--ink);
+            box-shadow: 0 6px 24px rgba(67, 56, 43, 0.22);
+          }
+          .oval:active {
+            background: var(--ink);
+            color: var(--bg);
+            border-color: var(--ink);
+            opacity: 0.82;
+            transform: scale(0.98);
+          }
+          .gph {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 400;
+            font-size: 22px;
+            text-align: center;
+            margin-top: 0;
+          }
+          .gph a {
+            border-bottom: 1px solid var(--muted);
+            padding-bottom: 2px;
+            color: var(--ink);
+          }
+          .cline {
+            text-align: center;
+            margin: 30px 0;
+          }
+          .cnum {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 400;
+            font-size: 22px;
+            color: var(--ink);
+          }
+          .cnum a {
+            border-bottom: 1px solid var(--muted);
+            padding-bottom: 2px;
+          }
+          .cname {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 16px;
+            color: var(--body);
+            margin-top: 6px;
+          }
+          .cdtitle {
+            font-family: "Great Vibes", cursive;
+            font-weight: 400;
+            letter-spacing: 0;
+            font-size: 44px;
+            line-height: 1.15;
+            color: var(--ink);
+            text-align: center;
+          }
+          .cd {
+            display: flex;
+            margin-top: 40px;
+          }
+          .cdcell {
+            flex: 1;
+            text-align: center;
+            padding: 0 6px;
+          }
+          .cdcell + .cdcell {
+            border-left: 1px solid var(--line);
+          }
+          .cdnum {
+            font-family: "Playfair Display", serif;
+            font-size: 44px;
+            color: var(--ink);
+            line-height: 1;
+          }
+          .cdlab {
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 13px;
+            color: var(--body);
+            margin-top: 12px;
+          }
+          .dashrow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-top: 0;
+          }
+          .dash-wrap {
+            height: 2px;
+            flex: 1;
+            background: rgba(193, 179, 161, 0.35);
+            position: relative;
+            overflow: hidden;
+            border-radius: 2px;
+          }
+          .dash-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: var(--ink);
+            width: 0;
+            transition: width 0.25s ease;
+          }
+          .slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            border-radius: 4px;
+          }
+          .slider::-webkit-scrollbar {
+            display: none;
+          }
+          .slide {
+            flex: 0 0 100%;
+            scroll-snap-align: center;
+            overflow: hidden;
+          }
+          .slide img {
+            width: 100%;
+            display: block;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+          }
+          .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 52px 32px;
+          }
+          .heroT {
+            font-family: "Great Vibes", cursive;
+            color: var(--ink);
+            font-weight: 400;
+            font-size: 60px;
+            line-height: 1.15;
+            text-align: center;
+          }
+          .musicbtn-unused {
+            position: fixed;
+            bottom: 26px;
+            right: calc(50% - 230px + 26px);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: rgba(238, 230, 216, 0.92);
+            backdrop-filter: blur(6px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--ink);
+            font-size: 22px;
+            line-height: 1;
+            z-index: 40;
+            box-shadow: 0 2px 14px rgba(80, 66, 48, 0.18);
+          }
+          /* ♫ text shows when not playing; CSS pause bars show when .playing */
+          .musicbtn::before {
+            display: none;
+          }
+          .musicbtn.playing::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 17px;
+            background: var(--ink);
+            border: none;
+            box-shadow: 8px 0 0 0 var(--ink);
+            border-radius: 1px;
+            margin-left: -6px; /* centers: 4px + 8px gap + 4px = 16px total, shift left so it's centred in 56px btn */
+          }
+          .thanks {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 28px;
+            text-align: center;
+            margin-top: 38px;
+            font-family: "Cormorant Garamond", serif; font-size-adjust: 0.5;
+            font-weight: 300;
+            font-size: 16px;
+            color: var(--ink);
+            line-height: 1.6;
+          }
+          .fadeup {
+            opacity: 0;
+            transform: translateY(22px);
+            transition:
+              opacity 1.5s ease,
+              transform 1.5s ease;
+          }
+          .fadeup.fadein {
+            transform: none;
+          }
+          .fadeup.vis {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          .particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 30;
+            border-radius: 50%;
+            opacity: 0;
+            animation: floatup linear infinite;
+          }
+          @keyframes floatup {
+            0% {
+              opacity: 0;
+              transform: translateY(0) scale(0.5);
+            }
+            10% {
+              opacity: 0.45;
+            }
+            90% {
+              opacity: 0.35;
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(-100vh) scale(1);
+            }
+          }
+          @media (max-width: 520px) {
+            .musicbtn {
+              right: 22px;
+            }
+          }
+        </style>
+      </helmet>
+      <sc-if value="{{ showEnvelope }}" hint-placeholder-val="{{ true }}"
+        ><div class="{{ envCls }}" onClick="{{ openEnvelope }}">
+          <div class="ev-stage">
+            <div class="{{ envElCls }}">
+              <div class="ev-back ev-paper"></div>
+
+              <div class="ev-flap">
+                <svg class="ev-face outer" viewBox="0 0 607 385">
+                  <defs>
+                    <pattern id="evPapA" patternUnits="userSpaceOnUse" width="512" height="512">
+                      <image href="./assets/env-paper.jpg" width="512" height="512" />
+                    </pattern>
+                    <filter id="evBlurA" x="-10%" y="-10%" width="120%" height="130%">
+                      <feGaussianBlur stdDeviation="6" />
+                    </filter>
+                    <linearGradient id="evFlapShade" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#fff" stop-opacity="0.10" />
+                      <stop offset="1" stop-color="#6b5a40" stop-opacity="0.06" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,0 L607,0 L321,358.1 Q303.5,380 286,358.1 Z" transform="translate(0,6)" fill="rgba(40,20,10,0.30)" filter="url(#evBlurA)" />
+                  <path d="M0,0 L607,0 L321,358.1 Q303.5,380 286,358.1 Z" fill="url(#evPapA)" />
+                  <path d="M0,0 L607,0 L321,358.1 Q303.5,380 286,358.1 Z" fill="url(#evFlapShade)" />
+                  <path d="M0,0 L286,358.1 Q303.5,380 321,358.1 L607,0" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.2" />
+                </svg>
+                <svg class="ev-face inner" viewBox="0 0 607 385">
+                  <defs>
+                    <pattern id="evPapB" patternUnits="userSpaceOnUse" width="512" height="512">
+                      <image href="./assets/env-paper.jpg" width="512" height="512" />
+                    </pattern>
+                    <linearGradient id="evFlapIn" x1="0" y1="1" x2="0" y2="0">
+                      <stop offset="0" stop-color="#5a4028" stop-opacity="0.16" />
+                      <stop offset="0.5" stop-color="#5a4028" stop-opacity="0.06" />
+                      <stop offset="1" stop-color="#fff" stop-opacity="0.05" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0,385 L607,385 L321,26.9 Q303.5,5 286,26.9 Z" fill="url(#evPapB)" />
+                  <path d="M0,385 L607,385 L321,26.9 Q303.5,5 286,26.9 Z" fill="url(#evFlapIn)" />
+                  <path d="M0,385 L286,26.9 Q303.5,5 321,26.9 L607,385" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" />
+                </svg>
+                <div class="ev-seal">
+                  <svg class="sf" viewBox="-60 -60 120 120">
+                    <defs>
+                      <radialGradient id="evSealRim" cx="0.4" cy="0.35" r="0.7">
+                        <stop offset="0" stop-color="#b0545d" />
+                        <stop offset="0.5" stop-color="#80232d" />
+                        <stop offset="1" stop-color="#5a111a" />
+                      </radialGradient>
+                      <radialGradient id="evSealFace" cx="0.42" cy="0.38" r="0.75">
+                        <stop offset="0" stop-color="#c59ca0" />
+                        <stop offset="0.55" stop-color="#ad7a7f" />
+                        <stop offset="1" stop-color="#8e5058" />
+                      </radialGradient>
+                      <filter id="evSealSh" x="-30%" y="-30%" width="160%" height="170%">
+                        <feGaussianBlur stdDeviation="3.2" />
+                      </filter>
+                      <filter id="evSealGl" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2.2" />
+                      </filter>
+                    </defs>
+                    <circle cx="2" cy="5" r="55" fill="rgba(35,10,10,0.45)" filter="url(#evSealSh)" />
+                    <path d="M55.2,-6.2 Q55.8,0.0 56.0,6.4 Q56.2,12.8 53.7,18.7 Q51.1,24.6 47.9,30.1 Q44.6,35.6 39.8,39.8 Q35.0,43.9 29.0,45.8 Q22.9,47.7 17.3,49.3 Q11.7,51.0 5.8,53.7 Q0.0,56.3 -6.1,54.8 Q-12.2,53.3 -18.1,51.6 Q-24.1,50.0 -30.6,48.3 Q-37.1,46.6 -41.0,41.1 Q-44.8,35.7 -48.7,30.5 Q-52.6,25.3 -53.5,18.9 Q-54.5,12.4 -55.1,6.2 Q-55.6,0.0 -53.7,-5.9 Q-51.7,-11.8 -50.7,-17.9 Q-49.8,-24.0 -47.2,-29.8 Q-44.6,-35.5 -39.9,-39.8 Q-35.2,-44.2 -30.2,-48.3 Q-25.3,-52.5 -19.1,-54.6 Q-13.0,-56.8 -6.5,-56.0 Q-0.0,-55.2 6.4,-55.6 Q12.8,-56.0 18.5,-53.1 Q24.2,-50.2 28.8,-46.1 Q33.5,-42.0 37.3,-37.4 Q41.0,-32.7 46.1,-28.7 Q51.1,-24.6 52.8,-18.5 Q54.5,-12.4 55.2,-6.2Z" fill="url(#evSealRim)" />
+                    <path d="M-40,-22 A46,46 0 0 1 10,-49" fill="none" stroke="rgba(255,225,228,0.55)" stroke-width="3.5" stroke-linecap="round" filter="url(#evSealGl)" />
+                    <circle r="44.5" fill="none" stroke="rgba(255,215,218,0.35)" stroke-width="1.4" />
+                    <circle r="42.5" fill="url(#evSealFace)" stroke="#6b1a23" stroke-width="2.4" />
+                    <g font-family="Great Vibes, cursive" font-size="50" text-anchor="middle" letter-spacing="-3">
+                      <text x="1.8" y="16.8" fill="rgba(255,228,230,0.55)">АЕ</text>
+                      <text x="1" y="16" fill="#7a2530">АЕ</text>
+                    </g>
+                    <ellipse cx="-14" cy="-20" rx="14" ry="7" transform="rotate(-30 -14 -20)" fill="rgba(255,240,240,0.18)" filter="url(#evSealGl)" />
+                  </svg>
+                  <svg class="sb" viewBox="-60 -60 120 120">
+                    <defs>
+                      <radialGradient id="evSealRimB" cx="0.4" cy="0.35" r="0.7">
+                        <stop offset="0" stop-color="#b0545d" />
+                        <stop offset="0.5" stop-color="#80232d" />
+                        <stop offset="1" stop-color="#5a111a" />
+                      </radialGradient>
+                      <radialGradient id="evSealFaceB" cx="0.42" cy="0.38" r="0.75">
+                        <stop offset="0" stop-color="#c59ca0" />
+                        <stop offset="0.55" stop-color="#ad7a7f" />
+                        <stop offset="1" stop-color="#8e5058" />
+                      </radialGradient>
+                      <filter id="evSealShB" x="-30%" y="-30%" width="160%" height="170%">
+                        <feGaussianBlur stdDeviation="3.2" />
+                      </filter>
+                      <filter id="evSealGlB" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2.2" />
+                      </filter>
+                    </defs>
+                    <path d="M55.2,-6.2 Q55.8,0.0 56.0,6.4 Q56.2,12.8 53.7,18.7 Q51.1,24.6 47.9,30.1 Q44.6,35.6 39.8,39.8 Q35.0,43.9 29.0,45.8 Q22.9,47.7 17.3,49.3 Q11.7,51.0 5.8,53.7 Q0.0,56.3 -6.1,54.8 Q-12.2,53.3 -18.1,51.6 Q-24.1,50.0 -30.6,48.3 Q-37.1,46.6 -41.0,41.1 Q-44.8,35.7 -48.7,30.5 Q-52.6,25.3 -53.5,18.9 Q-54.5,12.4 -55.1,6.2 Q-55.6,0.0 -53.7,-5.9 Q-51.7,-11.8 -50.7,-17.9 Q-49.8,-24.0 -47.2,-29.8 Q-44.6,-35.5 -39.9,-39.8 Q-35.2,-44.2 -30.2,-48.3 Q-25.3,-52.5 -19.1,-54.6 Q-13.0,-56.8 -6.5,-56.0 Q-0.0,-55.2 6.4,-55.6 Q12.8,-56.0 18.5,-53.1 Q24.2,-50.2 28.8,-46.1 Q33.5,-42.0 37.3,-37.4 Q41.0,-32.7 46.1,-28.7 Q51.1,-24.6 52.8,-18.5 Q54.5,-12.4 55.2,-6.2Z" fill="url(#evSealRimB)" />
+                    <path d="M-40,-22 A46,46 0 0 1 10,-49" fill="none" stroke="rgba(255,225,228,0.55)" stroke-width="3.5" stroke-linecap="round" filter="url(#evSealGlB)" />
+                    <circle r="44.5" fill="none" stroke="rgba(255,215,218,0.35)" stroke-width="1.4" />
+                    <circle r="42.5" fill="url(#evSealFaceB)" stroke="#6b1a23" stroke-width="2.4" />
+                    <g font-family="Great Vibes, cursive" font-size="50" text-anchor="middle" letter-spacing="-3">
+                      <text x="1.8" y="16.8" fill="rgba(255,228,230,0.55)">АЕ</text>
+                      <text x="1" y="16" fill="#7a2530">АЕ</text>
+                    </g>
+                    <ellipse cx="-14" cy="-20" rx="14" ry="7" transform="rotate(-30 -14 -20)" fill="rgba(255,240,240,0.18)" filter="url(#evSealGlB)" />
+                  </svg>
+                </div>
+              </div>
+
+              <div class="ev-card">
+                <div class="ev-card-top">СВАДЬБА</div>
+                <div class="ev-card-names"><span class="n1">Альберт</span><span class="n2">&amp; Ева</span></div>
+                <div class="ev-card-date">08.11.2026</div>
+              </div>
+
+              <svg class="ev-pocket" viewBox="0 0 702 1300">
+                <defs>
+                  <pattern id="evPapC" patternUnits="userSpaceOnUse" width="512" height="512">
+                    <image href="./assets/env-paper.jpg" width="512" height="512" />
+                  </pattern>
+                  <filter id="evBlurC" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="5" />
+                  </filter>
+                  <filter id="evBlurD" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" />
+                  </filter>
+                </defs>
+                <!-- pocket edge shadow cast on the card -->
+                <path d="M48,515 L300,822 L403,822 L655,515" fill="none" stroke="rgba(40,20,10,0.28)" stroke-width="12" filter="url(#evBlurC)" transform="translate(0,-3)" />
+                <!-- pocket base -->
+                <path d="M48,515 L300,822 L403,822 L655,515 L655,1185 L48,1185 Z" fill="url(#evPapC)" />
+                <!-- side flaps: light from the left -->
+                <path d="M48,515 L300,822 L48,1185 Z" fill="rgba(255,255,255,0.26)" />
+                <path d="M655,515 L403,822 L655,1185 Z" fill="rgba(90,70,35,0.12)" />
+                <!-- bottom flap overlaps the side flaps -->
+                <path d="M48,1185 L300,822 L403,822 L655,1185" fill="none" stroke="rgba(40,25,10,0.22)" stroke-width="7" filter="url(#evBlurD)" transform="translate(0,-2)" />
+                <path d="M48,1185 L300,822 L403,822 L655,1185 Z" fill="url(#evPapC)" />
+                <path d="M48,1185 L300,822 L403,822 L655,1185 Z" fill="rgba(110,90,60,0.05)" />
+                <!-- paper edge highlights -->
+                <path d="M48,515 L300,822 L403,822 L655,515" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.3" />
+                <path d="M48,1185 L300,822 M403,822 L655,1185" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.1" />
+              </svg>
+            </div>
+          </div>
+          <div class="{{ hintCls }}">Нажмите, чтобы открыть</div>
+        </div></sc-if
+      >
+      <div class="page"><div class="bgfix"></div>
+        <section class="sec fadeup" style="padding-top: 0; padding-bottom: 0">
+          <div class="satin"><div class="pframe"><img src="assets/g2.jpg" alt="Альберт и Ева" /></div></div>
+          <div class="pname">Альберт &amp; Ева</div>
+          <div class="verse">«Боже! будь милостив к нам и благослови нас, освети нас лицем Твоим»</div>
+          <div class="vref">Псалом&nbsp;66:2</div>
+        </section>
+
+        <section class="sec fadeup" style="padding-top: 30px">
+          <p class="lead" style="margin: 0; font-size: 18.5px;">
+            Мы счастливы сообщить вам, что совсем скоро состоится важное событие —<br /><span style="font-family: 'Great Vibes', cursive; font-size: 24px; line-height: 1.5; color: var(--ink);">рождение нашей семьи!</span><br />
+            В этот торжественный день хотим, чтобы вы были рядом!
+          </p>
+          
+        </section>
+
+        
+
+        <section class="sec fadeup" style="padding-top: 44px;">
+          <div style="position: relative; width: 100%; max-width: 330px; margin: 0 auto; border: 1px solid #7d6450; border-top: none; padding: 26px 14px 14px;">
+            <div style="position: absolute; left: -1px; right: -1px; top: 0; transform: translateY(-50%); display: flex; align-items: center; gap: 0;"><span style="flex: 1; height: 1px; background: #7d6450;"></span><span style="font-family: 'Old Standard TT', serif; font-size: 21px; letter-spacing: 2.5px; color: #2e231c; white-space: nowrap; line-height: 1; padding: 0 22px;">Ноябрь 2026</span><span style="flex: 1; height: 1px; background: #7d6450;"></span></div>
+            <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 3px; font-family: 'Old Standard TT', serif; font-size: 20px; color: #2e231c; text-align: center;"><div style="display: flex; align-items: center; justify-content: center; height: 38px;">1</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">2</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">3</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">4</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">5</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">6</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">7</div><div style="position: relative; display: flex; align-items: center; justify-content: center; height: 38px;"><svg viewBox="0 0 60 56" style="position: absolute; left: 46%; top: 50%; width: 46px; height: 43px; transform: translate(-50%, -50%) rotate(-6deg); overflow: visible;" fill="none" stroke="#7d6450" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M30 51C22 45 7 35 5 22C3.5 12 10 5 18 5.5C24 6 28 10.5 30 15C32 10 37 5 44 5.5C52 6.5 57 13 55 22C53 33 40 44 31 52" /></svg><span style="position: relative;">8</span></div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">9</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">10</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">11</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">12</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">13</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">14</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">15</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">16</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">17</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">18</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">19</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">20</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">21</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">22</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">23</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">24</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">25</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">26</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">27</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">28</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">29</div><div style="display: flex; align-items: center; justify-content: center; height: 38px;">30</div></div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 36px;">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="var(--ink)" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.5s-6.5-6.2-6.5-11.3a6.5 6.5 0 0 1 13 0c0 5.1-6.5 11.3-6.5 11.3z"/><circle cx="12" cy="10.2" r="2.3"/></svg>
+            <div style="font-family: 'Playfair Display', serif; font-size: 22px; color: var(--ink); text-align: center; line-height: 1.35;">г. Томск<br />ул. Большая Подгорная, 48</div>
+            <a href="https://yandex.ru/maps/?text=%D0%A2%D0%BE%D0%BC%D1%81%D0%BA%2C%20%D1%83%D0%BB.%20%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F%20%D0%9F%D0%BE%D0%B4%D0%B3%D0%BE%D1%80%D0%BD%D0%B0%D1%8F%2C%2048" target="_blank" rel="noopener" style="font-family: 'Cormorant Garamond', serif; font-size-adjust: 0.5; font-weight: 300; font-size: 15px; color: var(--ink); border-bottom: 1px solid var(--muted); padding-bottom: 2px;">Открыть на карте</a>
+          </div>
+        </section>
+
+        <section class="sec fadeup">
+          <div class="divm">
+            <span class="ln"></span><svg viewBox="0 0 64 58" style="width: 14px; height: 13px; flex: none; display: block;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="var(--line)" /></svg><span class="ln"></span>
+          </div>
+          <div class="h1">Тайминг</div>
+          <div class="tl">
+            <div class="tlitem">
+              <div class="tlrow"><span class="tlicon"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="2.2" x2="12" y2="4.8" />
+                  <line x1="10.6" y1="3.5" x2="13.4" y2="3.5" />
+                  <path d="M4 21V11.2L12 6l8 5.2V21" />
+                  <line x1="2.6" y1="21" x2="21.4" y2="21" />
+                  <path d="M9.7 21v-4.4a2.3 2.3 0 0 1 4.6 0V21" />
+                  <path
+                    d="M12 8.6c.85-1.05 2.7-.4 2.7.85 0 1.25-1.45 2.2-2.7 3.15-1.25-.95-2.7-1.9-2.7-3.15 0-1.25 1.85-1.9 2.7-.85z"
+                  /></svg
+              ></span><div class="tltime">10:00</div></div>
+              <div class="tllab">Венчание</div>
+            </div>
+            <div class="tlitem r">
+              <div class="tlrow"><span class="tlicon"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M12 2.8c-.9.85-1.3 1.5-1.3 2.05a1.3 1.3 0 0 0 2.6 0c0-.55-.4-1.2-1.3-2.05z"
+                  />
+                  <line x1="12" y1="5.7" x2="12" y2="8.6" />
+                  <path d="M7 8.6h10v3.4h2v7.4H5v-7.4h2z" />
+                  <path
+                    d="M7 12c.85-.85 1.75-.85 2.5 0s1.75.85 2.5 0 1.75-.85 2.5 0 1.75.85 2.5 0"
+                  /></svg
+              ></span><div class="tltime">12:00</div></div>
+              <div class="tllab">Праздничный обед</div>
+            </div>
+            <div class="tlitem">
+              <div class="tlrow"><span class="tlicon"
+                ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="9.5" y="2.4" width="11.5" height="7.4" rx="2.7" style="fill: var(--bg)" />
+                  <path d="M13 9.8 12.7 12.4 16.2 9.8" style="fill: var(--bg)" />
+                  <path
+                    transform="translate(15.2,6.1) scale(0.72) translate(-2,-1.35)"
+                    d="M0 0.9c0-1.3 1.55-1.85 2-.8.45-1.05 2-.5 2 .8 0 1.2-1.65 2.3-2 2.55-.35-.25-2-1.35-2-2.55z"
+                  />
+                  <rect x="2.2" y="8.6" width="14.6" height="9.6" rx="3.2" style="fill: var(--bg)" />
+                  <path d="M6.6 18.2 6.2 21.8 10.6 18.2" style="fill: var(--bg)" />
+                  <path
+                    transform="translate(9.5,13.4) scale(1.0) translate(-2,-1.35)"
+                    d="M0 0.9c0-1.3 1.55-1.85 2-.8.45-1.05 2-.5 2 .8 0 1.2-1.65 2.3-2 2.55-.35-.25-2-1.35-2-2.55z"
+                  /></svg
+              ></span><div class="tltime">14:00</div></div>
+              <div class="tllab">Поздравительная часть</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec fadeup">
+          <div class="divm">
+            <span class="ln"></span><svg viewBox="0 0 64 58" style="width: 14px; height: 13px; flex: none; display: block;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="var(--line)" /></svg><span class="ln"></span>
+          </div>
+          <div class="h1">Палитра</div>
+          <p class="lead" style="margin: 28px 0 34px;">Будем рады, если в своих нарядах вы поддержите цвета нашего праздника</p>
+          <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; align-items: start;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0;"><svg viewBox="0 0 64 58" style="width: 100%; max-width: 64px; height: auto; display: block; overflow: visible;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="#523c2f" stroke="#1f1814" stroke-width="1.4" stroke-linejoin="round" /></svg><span style="font-family: 'Cormorant Garamond', serif; font-size-adjust: 0.5; font-weight: 300; font-size: clamp(9.5px, 2.7vw, 11px); letter-spacing: 0; color: var(--body); text-align: center; line-height: 1.3;">Chocolate</span></div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0;"><svg viewBox="0 0 64 58" style="width: 100%; max-width: 64px; height: auto; display: block; overflow: visible;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="#d9ccbc" stroke="#1f1814" stroke-width="1.4" stroke-linejoin="round" /></svg><span style="font-family: 'Cormorant Garamond', serif; font-size-adjust: 0.5; font-weight: 300; font-size: clamp(9.5px, 2.7vw, 11px); letter-spacing: 0; color: var(--body); text-align: center; line-height: 1.3;">Champagne</span></div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0;"><svg viewBox="0 0 64 58" style="width: 100%; max-width: 64px; height: auto; display: block; overflow: visible;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="#bf9d9c" stroke="#1f1814" stroke-width="1.4" stroke-linejoin="round" /></svg><span style="font-family: 'Cormorant Garamond', serif; font-size-adjust: 0.5; font-weight: 300; font-size: clamp(9.5px, 2.7vw, 11px); letter-spacing: 0; color: var(--body); text-align: center; line-height: 1.3;">Light Pink</span></div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0;"><svg viewBox="0 0 64 58" style="width: 100%; max-width: 64px; height: auto; display: block; overflow: visible;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="#4f533f" stroke="#1f1814" stroke-width="1.4" stroke-linejoin="round" /></svg><span style="font-family: 'Cormorant Garamond', serif; font-size-adjust: 0.5; font-weight: 300; font-size: clamp(9.5px, 2.7vw, 11px); letter-spacing: 0; color: var(--body); text-align: center; line-height: 1.3;">Olive Green</span></div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0;"><svg viewBox="0 0 64 58" style="width: 100%; max-width: 64px; height: auto; display: block; overflow: visible;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="#530c1e" stroke="#1f1814" stroke-width="1.4" stroke-linejoin="round" /></svg><span style="font-family: 'Cormorant Garamond', serif; font-size-adjust: 0.5; font-weight: 300; font-size: clamp(9.5px, 2.7vw, 11px); letter-spacing: 0; color: var(--body); text-align: center; line-height: 1.3;">Burgundy</span></div>
+          </div>
+        </section>
+
+
+        
+        <section class="sec fadeup">
+          <div class="divm">
+            <span class="ln"></span><svg viewBox="0 0 64 58" style="width: 14px; height: 13px; flex: none; display: block;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="var(--line)" /></svg><span class="ln"></span>
+          </div>
+          <div class="h1">Пожелания</div>
+          <p class="lead" style="margin-top: 33px">
+            Будем благодарны, если вы выберете подарок, который пополнит бюджет нашей молодой семьи.
+          </p>
+          <p class="lead" style="margin-top: 26px">
+            Также вы можете выбрать и забронировать подарок из виш-листа или согласовать по телефону:
+          </p>
+          <div class="gph" style="margin-top: 18px">
+            <a href="tel:+79515959904">+7 (951) 595-99-04</a>
+          </div>
+          <div class="cline" style="margin: 6px 0 0"><div class="cname">Нина</div></div>
+          <a class="linkbtn" href="https://followish.io/mywishlist/zc757wvn7ahjiy" target="_blank" rel="noopener">Открыть виш-лист</a>
+        </section>
+
+        <section class="sec fadeup">
+          <div class="divm">
+            <span class="ln"></span><svg viewBox="0 0 64 58" style="width: 14px; height: 13px; flex: none; display: block;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="var(--line)" /></svg><span class="ln"></span>
+          </div>
+          <div class="h1">Контакты</div>
+          <div style="margin-top: 54px">
+            <div class="cline">
+              <div class="cnum"><a href="tel:+79138553390">+7 (913) 855-33-90</a></div>
+              <div class="cname">Альберт</div>
+            </div>
+            <div class="cline" style="margin-bottom:10px">
+              <div class="cnum"><a href="tel:+79511726803">+7 (951) 172-68-03</a></div>
+              <div class="cname">Ева</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec fadeup">
+          <div class="divm">
+            <span class="ln"></span><svg viewBox="0 0 64 58" style="width: 14px; height: 13px; flex: none; display: block;"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" fill="var(--line)" /></svg><span class="ln"></span>
+          </div>
+          <div class="cdtitle">Мы станем семьёй через…</div>
+          <div class="cd">
+            <div class="cdcell">
+              <div class="cdnum">{{ cdD }}</div>
+              <div class="cdlab">Дней</div>
+            </div>
+            <div class="cdcell">
+              <div class="cdnum">{{ cdH }}</div>
+              <div class="cdlab">Часов</div>
+            </div>
+            <div class="cdcell">
+              <div class="cdnum">{{ cdM }}</div>
+              <div class="cdlab">Минут</div>
+            </div>
+            <div class="cdcell">
+              <div class="cdnum">{{ cdS }}</div>
+              <div class="cdlab">Секунд</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sec fadeup">
+          
+          <div class="dashrow">
+            <sc-for list="{{ dashes }}" as="d" hint-placeholder-count="5"><svg viewBox="0 0 64 58" style="{{ d.style }}"><path d="M32 54C24 47 4 34 4 18.5C4 9.5 10.5 3.5 18.5 3.5C24.5 3.5 29.5 7 32 12C34.5 7 39.5 3.5 45.5 3.5C53.5 3.5 60 9.5 60 18.5C60 34 40 47 32 54Z" style="stroke: #b88f8a;" stroke-width="3.5" /></svg></sc-for>
+          </div>
+          <div class="slider" onScroll="{{ onSlide }}" style="margin-top: 22px">
+            <div class="slide"><img src="assets/g1.jpg" alt /></div>
+            <div class="slide"><img src="assets/hero.jpg" alt /></div>
+            <div class="slide"><img src="assets/g2.jpg" alt /></div>
+            <div class="slide"><img src="assets/g3.jpg" alt /></div>
+            <div class="slide"><img src="assets/g5.jpg" alt /></div>
+          </div>
+
+        </section>
+
+        <section class="hero fadeup">
+          <div class="heroT">Молитесь<br />о нас</div>
+        </section>
+
+      </div>
+    </x-dc>
+    <script type="text/x-dc" data-dc-script>
+      class Component extends DCLogic {
+        state = { envOpen:false, envLeave:false, envFade:false, envGone:false, fio:'', count:0, phone:'', nochleg:'нет', submitted:false, sending:false, fioError:'', phoneError:'', d:'00',h:'00',m:'00',s:'00', slide:0, playing:false };
+
+        // Вставь сюда URL веб-приложения Google Apps Script (см. инструкцию), например:
+        // 'https://script.google.com/macros/s/AKfycb.../exec'
+        GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw-hSA_RwUF33-c3ihV2GNdWyvvjV0E4L_iLMsbbajqtUO23NhscsIfp-amBriaaYcM/exec';
+
+        componentDidMount(){
+          // fit the 702×1300 envelope stage to the screen + compute the
+          // starting close-up zoom so the envelope always covers the viewport
+          this._fitEnv = () => {
+            const vw = Math.min(window.innerWidth, 460), vh = window.innerHeight;
+            const k = Math.min(vw / 702, vh / 1300);
+            const hw = vw / (2 * k), hh = vh / (2 * k);
+            const z0 = Math.max(2.2, hw / 300, (hh + 26) / 374, (hh - 30) / 294) * 1.02;
+            const r = document.documentElement.style;
+            r.setProperty('--ev-k', k.toFixed(4));
+            r.setProperty('--ev-z0', z0.toFixed(4));
+          };
+          this._fitEnv();
+          window.addEventListener('resize', this._fitEnv);
+
+          this.tick();
+          this._tickT = setInterval(()=>this.tick(), 1000);
+
+          
+
+          // Scroll lock while envelope is showing. The page must open at the very
+          // top, so the browser must not restore an old scroll position either.
+          if('scrollRestoration' in history) history.scrollRestoration = 'manual';
+          window.scrollTo(0, 0);
+          this._noScroll = (e) => e.preventDefault();
+          document.documentElement.style.overflow = 'hidden';
+          document.body.style.overflow = 'hidden';
+          document.addEventListener('touchmove', this._noScroll, { passive: false });
+          document.addEventListener('wheel', this._noScroll, { passive: false });
+
+          // fade-in on scroll — repeats when re-entering from below only
+          this._obs = new IntersectionObserver((entries)=>{
+            entries.forEach(e=>{
+              if(e.isIntersecting){ e.target.classList.add('vis'); }
+              else if(e.boundingClientRect.top > 0){ e.target.classList.remove('vis'); }
+            });
+          }, {threshold:0.08});
+          // observing starts in _startReveal(), when the envelope intro hands over to the page
+
+          // ambient floating particles
+          this._spawnParticles();
+        }
+
+        _unlockScroll(){
+          window.scrollTo(0, 0);
+          document.documentElement.style.overflow = '';
+          document.body.style.overflow = '';
+          if(this._noScroll){
+            document.removeEventListener('touchmove', this._noScroll);
+            document.removeEventListener('wheel', this._noScroll);
+          }
+        }
+
+        _startReveal(){
+          if(this._revealed || !this._obs) return;
+          this._revealed = true;
+          window.scrollTo(0, 0);
+          // blocks already on screen just fade in (no upward slide), so the page
+          // appears exactly in place; blocks further down keep the slide-up
+          document.querySelectorAll('.fadeup').forEach(el=>{
+            if(el.getBoundingClientRect().top < window.innerHeight) el.classList.add('fadein');
+            this._obs.observe(el);
+          });
+        }
+
+        _spawnParticles(){
+          const page = document.querySelector('.page');
+          if(!page) return;
+          const colors = ['rgba(201,182,166,.3)','rgba(74,52,40,.12)','rgba(79,90,62,.15)','rgba(198,158,162,.25)','rgba(92,20,32,.12)'];
+          const spawn = ()=>{
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const sz = 4 + Math.random()*6;
+            const x = Math.random()*100;
+            const dur = 12 + Math.random()*18;
+            const delay = Math.random()*4;
+            p.style.cssText = 'width:'+sz+'px;height:'+sz+'px;left:'+x+'%;bottom:-10px;background:'+colors[Math.floor(Math.random()*colors.length)]+';animation-duration:'+dur+'s;animation-delay:'+delay+'s';
+            page.appendChild(p);
+            setTimeout(()=>p.remove(), (dur+delay)*1000);
+          };
+          for(let i=0;i<6;i++) spawn();
+          this._particleT = setInterval(()=>{ for(let i=0;i<3;i++) spawn(); }, 5000);
+        }
+
+        componentWillUnmount(){
+          clearInterval(this._tickT);
+          clearInterval(this._particleT);
+          
+          if(this._obs) this._obs.disconnect();
+          if(this._noScroll){
+            document.removeEventListener('touchmove', this._noScroll);
+            document.removeEventListener('wheel', this._noScroll);
+          }
+        }
+
+        tick(){
+          const target = new Date('2026-11-08T10:00:00+07:00').getTime();
+          let diff = Math.max(0, target - Date.now());
+          const pad = n=>String(n).padStart(2,'0');
+          const d = Math.floor(diff/86400000); diff -= d*86400000;
+          const h = Math.floor(diff/3600000); diff -= h*3600000;
+          const m = Math.floor(diff/60000); diff -= m*60000;
+          const s = Math.floor(diff/1000);
+          this.setState({d:pad(d),h:pad(h),m:pad(m),s:pad(s)});
+        }
+
+        openEnvelope(){
+          if(this.state.envOpen) return;
+          this.setState({envOpen:true});
+          // (scroll stays locked until the intro is gone — see _unlockScroll)
+          // Call play() NOW, during the gesture.
+          // iOS holds the gesture permission even while the file is buffering.
+          // If the file isn't ready yet (AbortError), we queue a canplay retry —
+          // the element is already "user-activated" by this call, so the retry succeeds.
+          // envelope opens (~2.9s) → card held a moment → exit into the page
+          setTimeout(()=>{ this.setState({envLeave:true}); }, 3400);
+          setTimeout(()=>{ this.setState({envFade:true}); this._startReveal(); }, 4400);
+          setTimeout(()=>{
+            this.setState({envGone:true});
+            if(this._fitEnv) window.removeEventListener('resize', this._fitEnv);
+            this._unlockScroll();
+          }, 5400);
+        }
+
+        // ---- Валидация формы ----
+        // Разрешаем буквы (кириллица/латиница), пробелы и дефис в ФИО
+        filterFio(v){
+          return v.replace(/[^А-ЯЁа-яёA-Za-z\s-]/g, '').slice(0, 60);
+        }
+        // Разрешаем цифры и стандартные символы телефонного номера
+        filterPhone(v){
+          return v.replace(/[^\d+()\- ]/g, '').slice(0, 18);
+        }
+        validate(){
+          const fio = this.state.fio.trim();
+          const phoneDigits = this.state.phone.replace(/\D/g, '');
+          let fioError = '';
+          let phoneError = '';
+
+          if(!fio){
+            fioError = 'Укажите фамилию и имя';
+          } else if(fio.length < 2){
+            fioError = 'Слишком коротко';
+          } else if(!/^[А-ЯЁа-яёA-Za-z\s-]+$/.test(fio)){
+            fioError = 'Только буквы';
+          }
+
+          if(phoneDigits && (phoneDigits.length < 10 || phoneDigits.length > 11)){
+            phoneError = 'Проверьте номер телефона';
+          }
+
+          this.setState({fioError, phoneError});
+          return !fioError && !phoneError;
+        }
+        submit(){
+          if(this.state.sending || this.state.submitted) return;
+          if(!this.validate()) return;
+
+          this.setState({sending:true});
+
+          const payload = {
+            fio: this.state.fio.trim(),
+            count: String(this.state.count),
+            phone: this.state.phone.trim(),
+            nochleg: this.state.nochleg,
+          };
+
+          if(!this.GOOGLE_SCRIPT_URL || this.GOOGLE_SCRIPT_URL.indexOf('ВСТАВЬ') === 0){
+            // URL ещё не настроен — не теряем ответ гостя, показываем подтверждение локально
+            console.warn('GOOGLE_SCRIPT_URL не настроен — данные не отправлены в таблицу.');
+            this.setState({submitted:true, sending:false});
+            return;
+          }
+
+          this._submitViaHiddenForm(payload);
+
+          // Прочитать реальный статус доставки браузер всё равно не даёт (ни через fetch/no-cors,
+          // ни через скрытый iframe) — поэтому просто показываем «спасибо» после небольшой паузы.
+          setTimeout(() => {
+            this.setState({submitted:true, sending:false});
+          }, 500);
+        }
+
+        // Отправка через обычную HTML-форму в скрытый iframe вместо fetch().
+        // fetch() к чужому домену часто блокируется встроенными браузерами
+        // Telegram/WhatsApp/Instagram (in-app browser) — там гости и открывают
+        // приглашение чаще всего. Обычная навигация формы такими браузерами не режется.
+        _submitViaHiddenForm(payload){
+          let iframe = document.getElementById('rsvpHiddenFrame');
+          if(!iframe){
+            iframe = document.createElement('iframe');
+            iframe.id = 'rsvpHiddenFrame';
+            iframe.name = 'rsvpHiddenFrame';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+          }
+
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = this.GOOGLE_SCRIPT_URL;
+          form.target = 'rsvpHiddenFrame';
+          form.style.display = 'none';
+
+          Object.keys(payload).forEach(key => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = payload[key];
+            form.appendChild(input);
+          });
+
+          document.body.appendChild(form);
+          form.submit();
+          setTimeout(() => form.remove(), 1000);
+        }
+
+        // Manual gallery — the browser's native scroll-snap handles the swipe,
+        // we just read the resulting scroll position to update the dashes.
+        onSlide(e){
+          const el = e.target;
+          const i = Math.round(el.scrollLeft / el.clientWidth);
+          if(i !== this.state.slide) this.setState({slide:i});
+        }
+
+        renderVals(){
+          const s = this.state;
+          const dashes = Array.from({length:5}, (_,i)=>({
+            style: { width: 20, height: 18, display: 'block', fill: i === s.slide ? '#b88f8a' : 'transparent', transform: i === s.slide ? 'scale(1.3)' : 'scale(1)', transition: 'transform 0.3s ease, fill 0.3s ease' }
+          }));
+          return {
+            showEnvelope: !s.envGone,
+            envCls: 'env-screen' + (s.envLeave ? ' leave' : '') + (s.envFade ? ' gone' : ''),
+            envElCls: 'ev-cam' + (s.envOpen ? ' open' : ''),
+            hintCls: 'ev-hint' + (s.envOpen ? ' hide' : ''),
+            openEnvelope: this.openEnvelope.bind(this),
+            fio:s.fio, phone:s.phone, count:s.count, submitted:s.submitted, notSubmitted:!s.submitted,
+            cdD:s.d, cdH:s.h, cdM:s.m, cdS:s.s,
+            dashes,
+            daCls:'radio'+(s.nochleg==='да'?' on':''),
+            netCls:'radio'+(s.nochleg==='нет'?' on':''),
+            fioInpCls: 'inp' + (s.fioError ? ' err' : ''),
+            phoneInpCls: 'inp' + (s.phoneError ? ' err' : ''),
+            hasFioError: !!s.fioError,
+            hasPhoneError: !!s.phoneError,
+            fioError: s.fioError,
+            phoneError: s.phoneError,
+            submitCls: 'oval' + (s.sending ? ' disabled' : ''),
+            submitLabel: s.sending ? 'Отправка…' : 'Подтвердить присутствие',
+            onFio:e=>this.setState({fio:this.filterFio(e.target.value), fioError:''}),
+            onPhone:e=>this.setState({phone:this.filterPhone(e.target.value), phoneError:''}),
+            inc:()=>this.setState(p=>({count:Math.min(10,p.count+1)})),
+            dec:()=>this.setState(p=>({count:Math.max(0,p.count-1)})),
+            pickDa:()=>this.setState({nochleg:'да'}),
+            pickNet:()=>this.setState({nochleg:'нет'}),
+            submit:this.submit.bind(this),
+            onSlide:this.onSlide.bind(this),
+          };
+        }
+      }
+    </script>
+  </body>
+</html>
