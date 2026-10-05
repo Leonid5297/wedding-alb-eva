@@ -6,6 +6,16 @@
     <meta name="theme-color" content="#c5d1b6" />
     <meta name="color-scheme" content="only light" />
     <meta name="supported-color-schemes" content="light" />
+    <style>
+      /* Задаётся сразу в head, ещё до загрузки шрифтов/скрипта — убирает белую
+         вспышку при "резиновой" прокрутке вверху/внизу на iOS Safari и во
+         встроенных браузерах (Telegram, WhatsApp и т.п.), а также исключает
+         белый фон до того, как отработает основной скрипт приложения. */
+      html, body {
+        background-color: #c5d1b6;
+        overscroll-behavior-y: none;
+      }
+    </style>
     <link rel="icon" type="image/x-icon" href="./assets/favicon.ico" />
     <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16x16.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32x32.png" />
@@ -25,7 +35,12 @@
           rel="stylesheet"
         />
         <style>
-          html, body { color-scheme: only light; forced-color-adjust: none; }
+          html, body {
+            color-scheme: only light;
+            forced-color-adjust: none;
+            background-color: #c5d1b6;
+            overscroll-behavior-y: none;
+          }
           img, svg { forced-color-adjust: none; }
           :root {
             color-scheme: only light;
@@ -334,7 +349,7 @@
           .page {
             max-width: 460px;
             margin: 0 auto;
-            background: transparent;
+            background: #c5d1b6;
             min-height: 100vh;
             overflow: hidden;
             box-shadow: 0 0 30px rgba(60, 66, 50, 0.25);
